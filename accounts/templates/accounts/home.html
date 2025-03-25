@@ -1,14 +1,250 @@
-{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="{% static 'accounts/css/style.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page - Social Skills Improvement Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html,body {
+            background-color: hsl(0, 0%, 77%);
+            font-family: 'Inter', Arial, sans-serif;
+            width: 100%;
+            height: 100%;
+        }
 
-    <title>Home</title>
+        .navbar {
+            background: #FFFFFF;
+            padding: 10px 20px;
+            margin-top: 15px ;
+            margin-left: 40px;
+            border-radius: 25px;
+            width: 96%;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: #9e9c9c;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        .nav-links li a:hover {
+            color: #424242;
+        }
+
+        .circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #C5C5C5;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .name {
+            font-size: 20px;
+            margin: 0;
+            font-style: italic;
+        }
+
+      
+        main {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .content-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 500px;
+        }
+
+        .image {
+            order: 2;
+        }
+
+        
+        @keyframes popOut {
+    0% {
+        opacity: 0;
+        transform: scale(0.8); /* Start smaller */
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.1); /* Slightly oversize for effect */
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1); /* Back to original size */
+    }
+}
+
+.image img {
+    max-width: 100%; /* Responsive image */
+    height: auto; /* Maintain aspect ratio */
+    margin-top: 20%;
+    opacity: 0; /* Initially invisible */
+    animation: popOut 0.5s ease-out forwards; /* Apply pop-out animation */
+    animation-delay: 0s; /* Start after the quotes animation */
+}
+
+        @keyframes fadeInLeft {
+    0% {
+        opacity: 0;
+        transform: translateX(-50px); /* Starts 50px left */
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0); /* Moves to its original position */
+    }
+}
+
+.Quotes {
+    font-style: italic;
+    font-weight: bolder;
+    max-width: 500px;
+    font-size: 3.5em; /* Adjust font size for better line spacing */
+    color: #5c5c5c;
+    text-align: justify; /* Ensures text alignment */
+    line-height: 1.2; /* Reduces space between lines */
+    opacity: 0; /* Initially invisible */
+    animation: fadeInLeft 1.5s ease-out forwards; /* Apply left-to-right fade animation */
+    animation-delay: 0.5s; /* Start after a short delay */
+    white-space: nowrap; 
+    text-overflow: clip;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.start-button {
+    background-color: #5c5c5c;
+    color: white;
+    padding: 15px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-style: italic;
+    margin-left: 10px;
+    opacity: 0; /* Initially invisible */
+    animation: fadeIn 1s ease-out forwards; /* Apply fade-in animation */
+    animation-delay: 2s; /* Start after the quotes animation */
+}
+
+.start-button:hover {
+    background-color: #f8762a;
+}
+
+
+      
+
+         /* Media Queries for Responsiveness */
+         @media (max-width: 768px) {
+            .content-row {
+                flex-direction: column; /* Stack elements vertically */
+                gap: 20px; /* Reduce gap between elements */
+            }
+
+            .Quotes {
+                font-size: 2.5em; /* Reduce font size for smaller screens */
+            }
+
+            .start-button {
+                padding: 10px 20px; /* Adjust button padding */
+                font-size: 16px; /* Adjust button font size */
+            }
+        }
+    
+        @media (max-width: 480px) {
+            .Quotes {
+                font-size: 2em; /* Further reduce font size for very small screens */
+            }
+
+            .nav-links {
+                flex-direction: column; /* Stack nav links vertically */
+                gap: 10px; /* Reduce gap between nav links */
+            }
+
+            .nav-links li a {
+                font-size: 14px; /* Adjust font size for nav links */
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the Authentication App</h1>
-    <a href="{% url 'signup' %}">Sign Up</a> |
-    <a href="{% url 'login' %}">Log In</a>
+
+<!-- Navbar Start -->
+<nav class="navbar">
+    <div class="container">
+        <!-- Circle Logo -->
+        <div style="display: flex; align-items: center;">
+            <div class="circle"></div>
+            <a href="/" class="name">TalkHub</a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="{% url 'signup' %}">Sign Up</a></li>
+            <li><a href="{% url 'login' %}">Log In</a></li>
+        </ul>
+    </div>
+</nav>
+<!-- Navbar End -->
+
+<!-- Main Content Start -->
+<main>
+    <div class="content-row">
+        <div class="Quotes">
+            Connect, Play, Improve:<br>
+            Build Social Confidence<br>
+            Through Games!<br>
+            <button class="start-button" onclick="startGame()">Start Game</button>
+        </div>
+        <div class="image">
+            <img src="https://i.imgur.com/IFkNGih.png" alt="Sample Image">
+        </div>
+    </div>
+    
+   
+</main>
+<!-- Main Content End -->
+ 
+
+<script>
+    function startGame() {
+        alert("Game Starting... Connect with a random player!");
+        // Here you can implement your logic to start the game
+    }
+</script>
+
 </body>
 </html>

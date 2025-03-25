@@ -3,8 +3,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let messageBody = document.getElementById("chatbox");
     let sendMessageForm = document.querySelector("form");
     let sent_by = document.getElementById("sent_by").innerText.trim();
-    let receiver = null;
-
+    let receiver = document.querySelectorAll("#sent_to")[0].innerText;
+  console.log(document.querySelectorAll("#sent_to")[0].innerText);
     document.querySelectorAll("#sent_to").forEach(button => {
         button.addEventListener("click", function () {
             receiver = this.innerText.trim();

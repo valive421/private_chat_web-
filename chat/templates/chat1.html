@@ -107,11 +107,13 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-3 sidebar p-3 chats">
-                <h5 class="mb-3 text-white">Chats</h5>
+                <h5 class="mb-3 text-white">Chats </h5>
+                <p class="mb-3 text-white">by default chat is set to first active user click on user u want to chat with </p>
                 <ul class="list-group">
-                    <li class="list-group-item active">
+                    <li class="list-group-item active"> <h5 >welcome</h5>
                         <strong id="sent_by">{{ user.username }}</strong>
                     </li>
+                    <h5 >active users:</h5>
                     {% for user in users %}
                         <li class="list-group-item">
                             <button id="sent_to" class="btn btn-link text-decoration-none text-dark w-100 text-start">
@@ -123,6 +125,7 @@
             </div>
             <div class="col-md-9 d-flex flex-column vh-100">
                 <div class="chatbox flex-grow-1 overflow-auto p-3 border" id="chatbox">
+                    
                     {% for thread in Threads %}
                     {% for chat in thread.chatmessage_thread.all %}
                                         {% if chat.user == user %}
@@ -161,6 +164,6 @@
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{% static 'js/chat1.js' %}"></script>
+    <script src="{% static 'js/chat.js' %}"></script>
 </body>
 </html>
