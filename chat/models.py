@@ -11,7 +11,7 @@ class ThreadManager(models.Manager):
         first_person=min(user1, user2, key=lambda x: x.id),
         second_person=max(user1, user2, key=lambda x: x.id)
     )
-        return thread, created  # ✅ Corrected return
+        return thread, created  
 
 
     def by_user(self, user):
