@@ -11,11 +11,19 @@ let peerConnection;
 let localStream;
 let recipient = "";
 
-const configuration = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+const iceServers = [
+    { urls: "stun:stun.l.google.com:19302" },
+    {
+        urls: "turn:relay1.expressturn.com:3478",
+        username: "ef263220PSQYLOMNRT",
+        credential: "uZTlBZS7VZ348gkN"
+    }
+];
+
 let loc1 = window.location;
 let wsStart1 = loc1.protocol === "https:" ? "wss://" : "ws://";
-let callSocket = new WebSocket(wsStart1 + loc1.host + loc1.pathname+"video/");
-console.log(wsStart1 + loc1.host + loc1.pathname+"video/");
+let callSocket = new WebSocket(wsStart1 + loc1.host + loc1.pathname + "video/");
+console.log("WebSocket URL:", wsStart1 + loc1.host + loc1.pathname + "video/");
 
 callSocket.onopen = () => console.log("Call WebSocket Connected");
 callSocket.onerror = e => console.log("Call WebSocket Error:", e);
@@ -27,21 +35,16 @@ callSocket.onmessage = async (event) => {
 
     if (data.action === "call") {
         recipient = data.caller;
-        console.log("Received Data:", data);
-        console.log("Caller:", data.caller);
-
-        
-        // ✅ Update UI dynamically to show the caller's name
-        document.getElementById("callerName").innerText = `${data.caller} is calling...`;
+        console.log("Caller:", recipient);
+        callerName.innerText = `${recipient} is calling...`;
         callAlert.style.display = "block";
-
         acceptBtn.onclick = () => acceptCall();
         declineBtn.onclick = () => declineCall();
     }
 
     if (data.action === "accept") {
         console.log("Call accepted, starting WebRTC connection.");
-        startCall();
+        await startCall();
     }
 
     if (data.action === "decline") {
@@ -54,8 +57,7 @@ callSocket.onmessage = async (event) => {
     }
 };
 
-
-function initiateCall(username) {
+async function initiateCall(username) {
     recipient = username;
     console.log(`Calling ${recipient}...`);
     callSocket.send(JSON.stringify({ action: "call", recipient, caller: sent_by }));
@@ -77,26 +79,45 @@ function declineCall() {
 async function startCall() {
     if (!peerConnection) {
         console.log("Initializing peer connection...");
-        peerConnection = new RTCPeerConnection(configuration);
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-        localVideo.srcObject = localStream;
+        peerConnection = new RTCPeerConnection(iceServers);
+
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            localVideo.srcObject = localStream;
+            console.log("✅ Local stream added:", localStream);
+        } catch (error) {
+            console.error("❌ Error accessing media devices.", error);
+            return;
+        }
 
         peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
+                console.log("Sending ICE candidate:", event.candidate);
                 callSocket.send(JSON.stringify({ action: "candidate", recipient, candidate: event.candidate }));
             }
         };
 
         peerConnection.ontrack = (event) => {
-            remoteVideo.srcObject = event.streams[0];
+            console.log("✅ Received remote track event:", event);
+            console.log("✅ Stream object:", event.streams[0]);
+        
+            if (!remoteVideo.srcObject || remoteVideo.srcObject.id !== event.streams[0].id) {
+                remoteVideo.srcObject = event.streams[0];
+                remoteVideo.play().catch(error => console.error("❌ Error playing remote video:", error));
+                console.log("✅ Remote video stream set and playing.");
+            } else {
+                console.log("⚠️ Remote video stream already set.");
+            }
         };
+        
     }
 
     if (!peerConnection.localDescription) {
         console.log("Creating and sending offer...");
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
+        console.log("✅ Local SDP set:", peerConnection.localDescription);
         callSocket.send(JSON.stringify({ action: "offer", recipient, offer }));
     }
 }
@@ -110,18 +131,29 @@ async function handleSignal(data) {
     if (data.action === "offer") {
         console.log("Received offer, setting remote description...");
         await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+        console.log("✅ Remote SDP set:", peerConnection.remoteDescription);
+        
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
+        console.log("✅ Local SDP set (Answer):", peerConnection.localDescription);
         callSocket.send(JSON.stringify({ action: "answer", recipient, answer }));
     }
 
     if (data.action === "answer") {
         console.log("Received answer, setting remote description...");
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+        if (!peerConnection.remoteDescription) {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            console.log("✅ Remote SDP set (Answer):", peerConnection.remoteDescription);
+        }
     }
 
     if (data.action === "candidate") {
         console.log("Received ICE candidate, adding...");
-        await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+            console.log("✅ ICE candidate added successfully.");
+        } catch (error) {
+            console.error("❌ Error adding received ICE candidate:", error);
+        }
     }
 }
