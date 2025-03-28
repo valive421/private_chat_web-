@@ -1,30 +1,60 @@
 <!DOCTYPE html>
+{%load static%}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page - Social Skills Improvement Platform</title>
+    <title>Home | TalkHub - Social Connection Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        *{
+        :root {
+            --bg-dark: #000;
+            --bg-light: #111;
+            --accent: #ff4444;
+            --text-primary: #fff;
+            --text-secondary: #aaa;
+            --dot-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        html,body {
-            background-color: hsl(0, 0%, 77%);
+
+        body {
             font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
+            background-image: 
+                radial-gradient(var(--dot-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+            opacity: 0.5;
         }
 
         .navbar {
-            background: #FFFFFF;
-            padding: 10px 20px;
-            margin-top: 15px ;
-            margin-left: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 30px;
+            margin: 15px auto;
+            width: calc(100% - 30px);
+            max-width: 1200px;
             border-radius: 25px;
-            width: 96%;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .container {
@@ -33,171 +63,209 @@
             justify-content: space-between;
         }
 
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .logo-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
         .nav-links {
             list-style: none;
             display: flex;
             gap: 30px;
-
-            margin: 0;
-            padding: 0;
         }
 
         .nav-links li a {
             text-decoration: none;
-            color: #9e9c9c;
-            font-weight: bold;
-            font-style: italic;
+            color: var(--text-primary);
+            font-weight: 500;
+            position: relative;
+            padding: 5px 0;
         }
 
-        .nav-links li a:hover {
-            color: #424242;
+        .nav-links li a::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background-color: var(--accent);
+            transition: width 0.3s ease;
         }
 
-        .circle {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background-color: #C5C5C5;
-            display: inline-block;
-            margin-right: 8px;
+        .nav-links li a:hover::after {
+            width: 100%;
         }
 
-        .name {
-            font-size: 20px;
-            margin: 0;
-            font-style: italic;
-        }
-
-      
         main {
-            text-align: center;
-            margin-top: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 100px);
+            padding: 0 20px;
         }
 
         .content-row {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 500px;
+            gap: 100px;
+            max-width: 1200px;
+            width: 100%;
         }
 
-        .image {
-            order: 2;
+        .text-content {
+            max-width: 500px;
         }
 
-        
-        @keyframes popOut {
-    0% {
-        opacity: 0;
-        transform: scale(0.8); /* Start smaller */
-    }
-    50% {
-        opacity: 0.5;
-        transform: scale(1.1); /* Slightly oversize for effect */
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1); /* Back to original size */
-    }
-}
-
-.image img {
-    max-width: 100%; /* Responsive image */
-    height: auto; /* Maintain aspect ratio */
-    margin-top: 20%;
-    opacity: 0; /* Initially invisible */
-    animation: popOut 0.5s ease-out forwards; /* Apply pop-out animation */
-    animation-delay: 0s; /* Start after the quotes animation */
-}
+        .Quotes {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 30px;
+            color: var(--text-primary);
+            opacity: 0;
+            animation: fadeInLeft 1s ease-out forwards;
+            animation-delay: 0.3s;
+        }
 
         @keyframes fadeInLeft {
-    0% {
-        opacity: 0;
-        transform: translateX(-50px); /* Starts 50px left */
-    }
-    100% {
-        opacity: 1;
-        transform: translateX(0); /* Moves to its original position */
-    }
-}
-
-.Quotes {
-    font-style: italic;
-    font-weight: bolder;
-    max-width: 500px;
-    font-size: 3.5em; /* Adjust font size for better line spacing */
-    color: #5c5c5c;
-    text-align: justify; /* Ensures text alignment */
-    line-height: 1.2; /* Reduces space between lines */
-    opacity: 0; /* Initially invisible */
-    animation: fadeInLeft 1.5s ease-out forwards; /* Apply left-to-right fade animation */
-    animation-delay: 0.5s; /* Start after a short delay */
-    white-space: nowrap; 
-    text-overflow: clip;
-}
-
-@keyframes fadeIn {
-    0% {
-        opacity: 0;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-
-.start-button {
-    background-color: #5c5c5c;
-    color: white;
-    padding: 15px 30px;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 15px;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    font-style: italic;
-    margin-left: 10px;
-    opacity: 0; /* Initially invisible */
-    animation: fadeIn 1s ease-out forwards; /* Apply fade-in animation */
-    animation-delay: 2s; /* Start after the quotes animation */
-}
-
-.start-button:hover {
-    background-color: #f8762a;
-}
-
-
-      
-
-         /* Media Queries for Responsiveness */
-         @media (max-width: 768px) {
-            .content-row {
-                flex-direction: column; /* Stack elements vertically */
-                gap: 20px; /* Reduce gap between elements */
+            0% {
+                opacity: 0;
+                transform: translateX(-50px);
             }
-
-            .Quotes {
-                font-size: 2.5em; /* Reduce font size for smaller screens */
-            }
-
-            .start-button {
-                padding: 10px 20px; /* Adjust button padding */
-                font-size: 16px; /* Adjust button font size */
+            100% {
+                opacity: 1;
+                transform: translateX(0);
             }
         }
-    
+
+        .start-button {
+            background-color: var(--accent);
+            color: var(--text-primary);
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+            animation-delay: 1s;
+        }
+
+        .start-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 68, 68, 0.3);
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .image-container {
+            position: relative;
+            opacity: 0;
+            animation: popOut 0.8s ease-out forwards;
+            animation-delay: 0.6s;
+        }
+
+        @keyframes popOut {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .content-row {
+                gap: 50px;
+            }
+            
+            .Quotes {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content-row {
+                flex-direction: column;
+                text-align: center;
+                gap: 40px;
+            }
+            
+            .text-content {
+                order: 2;
+            }
+            
+            .image-container {
+                order: 1;
+            }
+            
+            .Quotes {
+                font-size: 2rem;
+                text-align: center;
+            }
+            
+            .start-button {
+                margin: 0 auto;
+            }
+        }
+
         @media (max-width: 480px) {
             .Quotes {
-                font-size: 2em; /* Further reduce font size for very small screens */
+                font-size: 1.8rem;
             }
-
+            
             .nav-links {
-                flex-direction: column; /* Stack nav links vertically */
-                gap: 10px; /* Reduce gap between nav links */
+                gap: 15px;
             }
-
-            .nav-links li a {
-                font-size: 14px; /* Adjust font size for nav links */
+            
+            .navbar {
+                padding: 10px 15px;
             }
         }
     </style>
@@ -207,14 +275,13 @@
 <!-- Navbar Start -->
 <nav class="navbar">
     <div class="container">
-        <!-- Circle Logo -->
-        <div style="display: flex; align-items: center;">
-            <div class="circle"></div>
-            <a href="/" class="name">TalkHub</a>
+        <div class="logo">
+            <div class="logo-dot"></div>
+            <div class="logo-text">vartalabh</div>
         </div>
         <ul class="nav-links">
-            <li><a href="{% url 'signup' %}">Sign Up</a></li>
-            <li><a href="{% url 'login' %}">Log In</a></li>
+            <li><a href="{% url 'signup' %}">SIGN UP</a></li>
+            <li><a href="{% url 'login' %}">LOG IN</a></li>
         </ul>
     </div>
 </nav>
@@ -222,13 +289,16 @@
 
 <!-- Main Content Start -->
 <main>
-   
-    
-   
+    <div class="content-row">
+        <div class="text-content">
+            <h1 class="Quotes">Connect authentically in a digital world</h1>
+            <button class="start-button">GET STARTED</button>
+        </div>
+        
+    </div>
 </main>
 <!-- Main Content End -->
- 
-
 
 </body>
+
 </html>

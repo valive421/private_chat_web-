@@ -4,190 +4,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'accounts/css/style.css' %}">
-    <!-- Add Inter font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <title>Login</title>
+    <title>Login | TalkHub</title>
     <style>
+        :root {
+            --bg-dark: #000;
+            --bg-light: #111;
+            --accent: #ff4444;
+            --text-primary: #fff;
+            --text-secondary: #aaa;
+            --dot-color: rgba(255, 255, 255, 0.1);
+        }
+
+        @font-face {
+            font-family: 'DotMatrix';
+            src: url('https://fonts.cdnfonts.com/css/dot-matrix');
+            font-weight: normal;
+            font-style: normal;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        html, body {
-            font-family: 'Inter', Arial, sans-serif;
-            height: 100%;
-            width: 100%;
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            height: 100vh;
             overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(var(--dot-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+            opacity: 0.5;
         }
 
         .navbar {
-            background: hsl(0, 0%, 77%);
-            padding: 10px 20px;
-            margin-top: 15px;
-            margin-left: 40px;
-            border-radius: 25px;
-            width: 96%;
-            position: fixed;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .container {
+        .logo {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .logo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .logo-text {
+            font-family: 'DotMatrix', sans-serif;
+            letter-spacing: 2px;
+            font-size: 1.2rem;
         }
 
         .nav-links {
-            list-style: none;
             display: flex;
-            gap: 30px;
+            gap: 25px;
         }
 
-        .nav-links li a {
+        .nav-links a {
+            color: var(--text-primary);
             text-decoration: none;
-            color: #D65900;
-            font-weight: bold;
-            font-style: italic;
+            font-size: 0.9rem;
+            position: relative;
+            padding: 5px 0;
         }
 
-        .nav-links li a:hover {
-            color: #424242;
+        .nav-links a::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background-color: var(--accent);
+            transition: width 0.3s ease;
         }
 
-        .circle {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background-color: #585858;
-            display: inline-block;
-            margin-right: 8px;
+        .nav-links a:hover::after {
+            width: 100%;
         }
 
         .main {
             display: flex;
-            height: 100%; /* Adjust for navbar height */
+            height: calc(100vh - 60px);
         }
 
         .left-section {
-            width: 40%;
-            background-color: #f4f4f4;
-            padding: 30px;
+            width: 50%;
+            padding: 40px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
         }
 
         .head {
-            color: #C53939;
-            font-size: 36px; /* Larger font size */
-            font-weight: 600; /* Semi-bold from Inter font */
-            text-transform: uppercase; /* Optional */
-            margin-bottom: 30px; /* Space below the heading */
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            letter-spacing: -1px;
+            position: relative;
+            display: inline-block;
         }
 
-        .right-section {
-            width: 60%;
-        }
-
-        .right-section img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .head::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background-color: var(--accent);
         }
 
         .form {
-            width: 80%;
+            max-width: 350px;
         }
 
-        .form label {
-            font-size: 16px;
-            color: hsl(0, 0%, 55%);
-            margin-bottom: 10px;
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
             display: block;
-            font-weight: 600; /* Semi-bold for labels */
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
         }
 
-        .form input {
+        .form-group input {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 25px;
-            font-family: 'Inter', Arial, sans-serif; /* Use Inter font */
-            font-weight: 400; /* Normal weight for input text */
+            padding: 12px 15px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
         }
 
-        .form a {
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
+
+        .forgot-password {
             display: block;
-            font-size: 14px;
-            color: #C53939;
-            text-decoration: none;
             text-align: right;
-            margin-bottom: 20px;
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-decoration: none;
         }
 
-        .form a:hover {
-            text-decoration: underline;
+        .forgot-password:hover {
+            color: var(--accent);
         }
 
-        .form button {
+        .submit-btn {
             width: 100%;
-            padding: 10px;
-            background-color:#D65900;
-            color: #fff;
-            border: none;
-            border-radius: 25px;
+            padding: 12px;
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
             cursor: pointer;
-            font-size: 16px;
-            font-family: 'Inter', Arial, sans-serif; /* Use Inter font */
-            font-weight: 600; /* Semi-bold for the button */
-            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .form button:hover {
-            background-color: hsl(0, 0%, 40%);
+        .submit-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                          transparent, 
+                          rgba(255, 68, 68, 0.2), 
+                          transparent);
+            transition: all 0.5s ease;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            background: rgba(255, 68, 68, 0.1);
         }
 
         .signup-link {
-            font-style: italic; /* Italicize the 'Sign Up' text */
-            font-weight: 600; /* Semi-bold for consistency */
-        }
-
-        .signup-link, .forget-password {
-           
-            margin-top: 0px;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: center;
         }
 
         .signup-link a {
-            color: #C53939;
+            color: var(--accent);
             text-decoration: none;
-            display: inline;
         }
 
         .signup-link a:hover {
             text-decoration: underline;
         }
-       
+
+        .right-section {
+            width: 50%;
+            background: linear-gradient(135deg, 
+                      rgba(255, 68, 68, 0.05), 
+                      rgba(255, 68, 68, 0.02));
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .right-section img {
+            width: 70%;
+            opacity: 0.8;
+            filter: grayscale(100%) contrast(120%);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main {
+                flex-direction: column;
+            }
+            
+            .left-section, .right-section {
+                width: 100%;
+                padding: 30px;
+            }
+            
+            .right-section {
+                display: none;
+            }
+            
+            .form {
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Navbar Start -->
+    <!-- Navbar -->
     <nav class="navbar">
-        <div class="container">
-            <!-- Circle Logo -->
-            <div style="display: flex; align-items: center;">
-                <div class="circle"></div>
-                <a href="/" class="name">TalkHub</a>
-            </div>
-            <ul class="nav-links">
-                <li><a href="{% url 'signup' %}">Sign Up</a></li>
-                <li><a href="#">Profile</a></li>
-            </ul>
+        <div class="logo">
+            <div class="logo-dot"></div>
+            <div class="logo-text">vartalabh</div>
+        </div>
+        <div class="nav-links">
+            <a href="{% url 'signup' %}">SIGN UP</a>
+            <a href="#">PROFILE</a>
         </div>
     </nav>
-    <!-- Navbar End -->
 
     <!-- Main Content -->
     <div class="main">
@@ -195,27 +298,30 @@
         <div class="left-section">
             <h1 class="head">LOGIN</h1>
             <form class="form" method="POST" action="{% url 'login' %}">
-                <!---- {% csrf_token %} -->
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit">Log In</button>
-                </form>
-               
-
-                <!-- Login Button -->
-                <button type="submit">Login</button>
-
-                <!-- Don’t have an account with Sign Up Link -->
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="username">USERNAME</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">PASSWORD</label>
+                    <input type="password" id="password" name="password" required>
+                    <a href="#" class="forgot-password">FORGOT PASSWORD?</a>
+                </div>
+                
+                <button type="submit" class="submit-btn">LOGIN</button>
+                
                 <p class="signup-link">
-                    Don’t have an account? <a href="{% url 'signup' %}">Click here</a>
+                    DON'T HAVE AN ACCOUNT? <a href="{% url 'signup' %}">SIGN UP</a>
                 </p>
             </form>
         </div>
 
         <!-- Right Section -->
         <div class="right-section">
-            <img src="img2.jpg" alt="Login Illustration">
+            <img src="{% static 'accounts/img/login-bg.jpg' %}" alt="Login Visual">
         </div>
     </div>
 </body>
