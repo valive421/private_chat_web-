@@ -89,3 +89,28 @@ class chat_Consumer(AsyncWebsocketConsumer):
     def save_message(self, thread, user, message):
         """Save a new chat message in the database."""
         return ChatMessage.objects.create(thread=thread, user=user, message=message)
+
+class VideoCallConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.user = self.scope["user"]
+        self.video_chat_room = f"video_chatroom_{self.user.username}"
+
+        await self.channel_layer.group_add(self.video_chat_room, self.channel_name)
+        await self.accept()
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(self.video_chat_room, self.channel_name)
+
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        action = data.get("action")
+        recipient = data.get("recipient")  # Username of the receiver
+
+        if action in ["message", "call", "accept", "decline", "offer", "answer", "candidate"]:
+            await self.channel_layer.group_send(
+    f"video_chatroom_{recipient}",  # Use video group
+    {**data, "type": "signal"},
+)
+
+
+    async def signal(self, event):
+        await self.send(json.dumps(event))

@@ -15,7 +15,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let loc = window.location;
     let wsStart = loc.protocol === "https:" ? "wss://" : "ws://";
-    let socket = new WebSocket(wsStart + loc.host + loc.pathname);
+    let socket = new WebSocket(wsStart + loc.host + loc.pathname+"chat/");
+    console.log(wsStart + loc.host + loc.pathname+"chat/");
 
     socket.onopen = () => console.log("WebSocket Connected");
     socket.onerror = e => console.log("WebSocket Error:", e);

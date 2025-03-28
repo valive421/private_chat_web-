@@ -119,6 +119,7 @@
                             <button id="sent_to" class="btn btn-link text-decoration-none text-dark w-100 text-start">
                                 {{ user.username }}
                             </button>
+                            <button class="call-btn" onclick="initiateCall('{{ user.username }}')">Call</button>
                         </li>
                     {% endfor %}
                 </ul>
@@ -163,7 +164,20 @@
             </div>
         </div>
     </div>
+       <!-- Video Call Section -->
+       <div class="video-call-container">
+        <video id="localVideo" autoplay playsinline></video>
+        <video id="remoteVideo" autoplay playsinline></video>
+      </div>
+
+      <div id="callAlert" style="display: none;">
+        <p id="callerName">Incoming Call</p>
+        <button id="acceptCall">Accept</button>
+        <button id="declineCall">Decline</button>
+    </div>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{% static 'js/chat.js' %}"></script>
+    <script src="{% static 'js/chat1.js' %}"></script>
+    <script src="{% static 'js/video.js' %}"></script>
 </body>
 </html>
