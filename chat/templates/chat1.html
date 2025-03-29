@@ -189,7 +189,14 @@
             font-size: 1.2rem;
             margin-bottom: 20px;
         }
-
+        .notification-badge {
+            background-color: var(--accent);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            vertical-align: middle;
+        }
         #acceptCall {
             background-color: var(--accept);
             border: none;
@@ -217,6 +224,31 @@
             height: 40px !important;
             border: 2px solid var(--accent) !important;
         }
+        #sent_to {
+            display: flex !important;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            background: none !important; /* Remove background */
+            border: none !important; /* Remove border if present */
+            box-shadow: none !important; /* Remove any shadow */
+        }
+        
+        .username {
+            flex-grow: 1;
+            text-align: left;
+            color: #fff; /* Ensure text color matches your theme */
+        }
+        
+        .notification-badge {
+            background-color: #ff4444; /* Keep accent color */
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+            border: none; /* Remove border if any */
+        }
     </style>
 </head>
 <body>
@@ -234,9 +266,10 @@
                     <h5 class="mt-3" style="color:rgb(244, 240, 240);">active users:</h5>
                     {% for user in users %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <button id="sent_to" class="btn btn-link text-decoration-none text-white w-100 text-start">
-                                {{ user.username }}
-                            </button>
+                            <button id="sent_to" data-username="{{ user.username }}">
+                                <span class="username">{{ user.username }}</span>
+                                <span class="notification-badge"></span>
+                              </button>
                             <button class="call-btn" onclick="initiateCall('{{ user.username }}')">
                                 📞
                             </button>
@@ -308,7 +341,7 @@
         </button>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{% static 'js/chat1.js' %}"></script>
+    <script src="{% static 'js/chat.js' %}"></script>
     <script src="{% static 'js/video1.js' %}"></script>
 </body>
 </html>
