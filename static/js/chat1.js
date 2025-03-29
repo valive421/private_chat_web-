@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function loadChatHistory(receiver) {
         fetch(`/chat/${receiver}/`, {
             headers: {
-                "X-Requested-With": "XMLHttpRequest"  // ✅ Ensures Django detects AJAX
+                "X-Requested-With": "XMLHttpRequest"  // 
             }
         })
         .then(response => response.json())  // Expect JSON response

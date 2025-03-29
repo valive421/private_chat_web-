@@ -9,12 +9,12 @@ from chat.models import Threads, ChatMessage
 def chat_page(request, username=None):
     """Handles chat page rendering and JSON response for AJAX requests."""
 
-    # ✅ Log request headers for debugging
-   # print("🔎 Request Headers:", dict(request.headers))  
+    #  Log request headers for debugging
+   # print(" Request Headers:", dict(request.headers))  
 
     users = User.objects.exclude(username=request.user.username)
 
-    # ✅ Check AJAX request
+    #  Check AJAX request
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         if username:
             selected_user = get_object_or_404(User, username=username)
@@ -39,7 +39,7 @@ def chat_page(request, username=None):
 
         return JsonResponse({"error": "No username provided"}, status=400)
 
-    #print("🔴 Received non-AJAX request at", request.path)
+ 
 
     return render(request, "chat1.html", {
         "users": users,

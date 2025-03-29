@@ -3,9 +3,32 @@ let callerName = document.getElementById("callerName");
 let acceptBtn = document.getElementById("acceptCall");
 let declineBtn = document.getElementById("declineCall");
 let sent_by = document.getElementById("sent_by").innerText.trim();
+let callWaitingScreen = document.getElementById("callWaitingScreen");
+let callWaitingText = document.getElementById("callWaitingText");
+let cancelCallBtn = document.getElementById("cancelCall");
 
 let localVideo = document.getElementById("localVideo");
 let remoteVideo = document.getElementById("remoteVideo");
+ 
+// Add this code at the end of your script or in a DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Request permissions immediately when page loads
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: true, 
+            audio: true 
+        });
+        
+        // Stop all tracks immediately (we just wanted permission)
+        stream.getTracks().forEach(track => track.stop());
+        
+        console.log("Camera and microphone permissions granted");
+    } catch (error) {
+        console.error("Permission denied or error:", error);
+        alert("Please enable camera and microphone permissions to use video calling");
+    }
+});
+
 
 let peerConnection;
 let localStream;
@@ -44,12 +67,24 @@ callSocket.onmessage = async (event) => {
 
     if (data.action === "accept") {
         console.log("Call accepted, starting WebRTC connection.");
+        callWaitingScreen.style.display = "none"; // Hide waiting screen when call is accepted
         await startCall();
     }
 
     if (data.action === "decline") {
         console.log("Call declined by recipient.");
-        alert("Call declined");
+        callWaitingScreen.style.display = "none"; // Hide waiting screen
+        alert(`${recipient} declined the call`);
+        
+        // Clean up
+        if (peerConnection) {
+            peerConnection.close();
+            peerConnection = null;
+        }
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localVideo.srcObject = null;
+        }
     }
 
     if (["offer", "answer", "candidate"].includes(data.action)) {
@@ -60,9 +95,35 @@ callSocket.onmessage = async (event) => {
 async function initiateCall(username) {
     recipient = username;
     console.log(`Calling ${recipient}...`);
+    
+    // Show call waiting screen
+    callWaitingText.innerText = `Calling ${recipient}...`;
+    callWaitingScreen.style.display = "block";
+    
+    // Setup cancel button
+    cancelCallBtn.onclick = () => {
+        cancelCall();
+    };
+    
     callSocket.send(JSON.stringify({ action: "call", recipient, caller: sent_by }));
 }
-
+function cancelCall() {
+    callWaitingScreen.style.display = "none";
+    console.log("Call cancelled by caller.");
+    callSocket.send(JSON.stringify({ action: "decline", recipient }));
+    
+    // Clean up if peer connection exists
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+    }
+    
+    // Stop local stream
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localVideo.srcObject = null;
+    }
+}
 async function acceptCall() {
     callAlert.style.display = "none";
     console.log("Call accepted.");
