@@ -1,5 +1,4 @@
-// Video Call WebSocket and WebRTC Implementation
-// Filename: v.js
+
 // Version: 1.3.2 - Modified to require explicit call acceptance
 
 // Configuration
