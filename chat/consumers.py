@@ -90,27 +90,144 @@ class chat_Consumer(AsyncWebsocketConsumer):
         """Save a new chat message in the database."""
         return ChatMessage.objects.create(thread=thread, user=user, message=message)
 
+from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.db import database_sync_to_async
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+
+User = get_user_model()
+
 class VideoCallConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope["user"]
-        self.video_chat_room = f"video_chatroom_{self.user.username}"
+        if not self.user.is_authenticated:
+            await self.close()
+            return
 
-        await self.channel_layer.group_add(self.video_chat_room, self.channel_name)
+        self.video_chat_room = f"video_chatroom_{self.user.username}"
+        await self.channel_layer.group_add(
+            self.video_chat_room,
+            self.channel_name
+        )
         await self.accept()
+        await self.send(text_data=json.dumps({
+            "action": "connection_success",
+            "message": "WebSocket connection established",
+            "username": self.user.username
+        }))
+
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.video_chat_room, self.channel_name)
+        if hasattr(self, 'video_chat_room'):
+            await self.channel_layer.group_discard(
+                self.video_chat_room,
+                self.channel_name
+            )
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        action = data.get("action")
-        recipient = data.get("recipient")  # Username of the receiver
+        try:
+            data = json.loads(text_data)
+            action = data.get('action')
+            
+            if action == 'ping':
+                await self.send(text_data=json.dumps({'action': 'pong'}))
+                return
+                
+            if not action:
+                await self.send(text_data=json.dumps({
+                    "action": "error",
+                    "message": "Missing action field"
+                }))
+                return
 
-        if action in ["message", "call", "accept", "decline", "offer", "answer", "candidate"]:
-            await self.channel_layer.group_send(
-    f"video_chatroom_{recipient}",  # Use video group
-    {**data, "type": "signal"},
-)
+            recipient_username = data.get('recipient')
+            if not recipient_username:
+                await self.send(text_data=json.dumps({
+                    "action": "error",
+                    "message": "Missing recipient field"
+                }))
+                return
 
+            # Validate recipient exists
+            recipient = await self.get_user(recipient_username)
+            if not recipient:
+                await self.send(text_data=json.dumps({
+                    "action": "error",
+                    "message": "Recipient not found"
+                }))
+                return
+
+            # Handle different actions
+            if action == 'call':
+                await self.handle_call(recipient_username)
+            elif action in ['offer', 'answer', 'candidate']:
+                if not data.get(action):  # Check offer/answer/candidate exists
+                    await self.send(text_data=json.dumps({
+                        "action": "error",
+                        "message": f"Missing {action} field"
+                    }))
+                    return
+                await self.forward_signal(data, recipient_username)
+            elif action in ['accept', 'decline', 'end-call']:
+                await self.forward_signal(data, recipient_username)
+            else:
+                await self.send(text_data=json.dumps({
+                    "action": "error",
+                    "message": "Invalid action"
+                }))
+
+        except json.JSONDecodeError:
+            await self.send(text_data=json.dumps({
+                "action": "error",
+                "message": "Invalid JSON format"
+            }))
+        except Exception as e:
+            await self.send(text_data=json.dumps({
+                "action": "error",
+                "message": str(e)
+            }))
+
+    async def handle_call(self, recipient_username):
+        """Handle call initiation"""
+        await self.channel_layer.group_send(
+            f"video_chatroom_{recipient_username}",
+            {
+                "type": "signal",
+                "action": "call",
+                "caller": self.user.username,
+                "recipient": recipient_username,
+                "timestamp": self.get_timestamp()
+            }
+        )
+
+    async def forward_signal(self, data, recipient_username):
+        """Forward signaling data to recipient"""
+        data_to_send = {
+            **data,
+            "sender": self.user.username,
+            "timestamp": self.get_timestamp()
+        }
+        await self.channel_layer.group_send(
+            f"video_chatroom_{recipient_username}",
+            {
+                "type": "signal",
+                **data_to_send
+            }
+        )
 
     async def signal(self, event):
-        await self.send(json.dumps(event))
+        """Send signaling data to client"""
+        await self.send(text_data=json.dumps({
+            k: v for k, v in event.items() 
+            if k not in ['type']
+        }))
+
+    @database_sync_to_async
+    def get_user(self, username):
+        try:
+            return User.objects.get(username=username)
+        except ObjectDoesNotExist:
+            return None
+            
+    def get_timestamp(self):
+        from datetime import datetime
+        return datetime.now().isoformat()
