@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | TalkHub</title>
+    <style>
+        :root {
+            --bg-dark: #000;
+            --bg-light: #111;
+            --accent: #ff4444;
+            --text-primary: #fff;
+            --text-secondary: #aaa;
+            --dot-color: rgba(255, 255, 255, 0.1);
+        }
+
+        @font-face {
+            font-family: 'DotMatrix';
+            src: url('https://fonts.cdnfonts.com/css/dot-matrix');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(var(--dot-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        .navbar {
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .logo-text {
+            font-family: 'DotMatrix', sans-serif;
+            letter-spacing: 2px;
+            font-size: 1.2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-links a::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background-color: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .main {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .left-section {
+            width: 50%;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .head {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            letter-spacing: -1px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .head::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background-color: var(--accent);
+        }
+
+        .form {
+            max-width: 350px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
+
+        .forgot-password {
+            display: block;
+            text-align: right;
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .forgot-password:hover {
+            color: var(--accent);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                          transparent, 
+                          rgba(255, 68, 68, 0.2), 
+                          transparent);
+            transition: all 0.5s ease;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            background: rgba(255, 68, 68, 0.1);
+        }
+
+        .signup-link {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .signup-link a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .right-section {
+            width: 50%;
+            background: linear-gradient(135deg, 
+                      rgba(255, 68, 68, 0.05), 
+                      rgba(255, 68, 68, 0.02));
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .right-section img {
+            width: 70%;
+            opacity: 0.8;
+            filter: grayscale(100%) contrast(120%);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main {
+                flex-direction: column;
+            }
+            
+            .left-section, .right-section {
+                width: 100%;
+                padding: 30px;
+            }
+            
+            .right-section {
+                display: none;
+            }
+            
+            .form {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-dot"></div>
+            <div class="logo-text">vartalabh</div>
+        </div>
+        <div class="nav-links">
+            <a href="{% url 'signup' %}">SIGN UP</a>
+            <a href="#">PROFILE</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Left Section -->
+        <div class="left-section">
+            <h1 class="head">LOGIN</h1>
+            <form class="form" method="POST" action="{% url 'login' %}">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="username">USERNAME</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">PASSWORD</label>
+                    <input type="password" id="password" name="password" required>
+                    <a href="#" class="forgot-password">FORGOT PASSWORD?</a>
+                </div>
+                
+                <button type="submit" class="submit-btn">LOGIN</button>
+                
+                <p class="signup-link">
+                    DON'T HAVE AN ACCOUNT? <a href="{% url 'signup' %}">SIGN UP</a>
+                </p>
+            </form>
+        </div>
+
+        <!-- Right Section -->
+        <div class="right-section">
+            <img src="{% static 'accounts/img/login-bg.jpg' %}" alt="Login Visual">
+        </div>
+    </div>
+</body>
+</html>

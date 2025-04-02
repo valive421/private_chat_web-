@@ -1,0 +1,234 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create your TalkHub account to join our community">
+    <title>Sign Up | TalkHub - Connect with Friends</title>
+    <link rel="stylesheet" href="{% static 'accounts/css/style.css' %}">
+    <style>
+        :root {
+            --bg-dark: #000;
+            --bg-light: #111;
+            --accent: #ff4444;
+            --text-primary: #fff;
+            --text-secondary: #aaa;
+            --dot-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(var(--dot-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            letter-spacing: 1px;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .signup-container {
+            max-width: 420px;
+            width: 100%;
+            background: rgba(17, 17, 17, 0.8);
+            padding: 2.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background-color: var(--accent);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 68, 68, 0.2);
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--accent);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        button[type="submit"]:hover {
+            background-color: rgba(255, 68, 68, 0.8);
+            transform: translateY(-1px);
+        }
+
+        .login-link {
+            display: block;
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .login-link a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .errorlist {
+            list-style: none;
+            padding: 0;
+            color: var(--accent);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 480px) {
+            .signup-container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-dot"></div>
+            <div class="logo-text">vartalabh</div>
+        </div>
+    </header>
+
+    <main>
+        <div class="signup-container">
+            <h1>Create Account</h1>
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="errorlist">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+                
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="errorlist">
+                                {{ field.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <button type="submit">Sign Up</button>
+                
+                <p class="login-link">
+                    Already have an account? <a href="{% url 'login' %}">Log In</a>
+                </p>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

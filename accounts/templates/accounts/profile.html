@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{% static 'static/accounts/css/style1.css' %}">
+    <title>Profile</title>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <h1>TalkHub</h1>
+        
+        <h1>Welcome, {{ user.username }}</h1><a href="{% url 'logout' %}">Log Out</a>
+    </div>
+
+    <!-- Welcome Section -->
+    <div class="welcome-container">
+        
+        <h1><em>Connect, Improve:</em> <br> Build Social Confidence </h1>
+        <a href="{% url 'home_r' %}">chat</a>
+
+    </div>
+
+    <!-- List of Links -->
+   
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2024 TalkHub. Build Social Confidence Through Games!</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'static/accounts/js/script.js' %}"></script>
+</body>
+</html>
