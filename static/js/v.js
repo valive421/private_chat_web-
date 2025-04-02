@@ -1,6 +1,4 @@
-
-// Version: 1.3.2 - Modified to require explicit call acceptance
-
+// Version: 1.3.3 - Fixed Android to Desktop calling
 // Configuration
 const DEBUG_MODE = true;
 const HEARTBEAT_INTERVAL = 30000; // 30 seconds
@@ -24,8 +22,9 @@ const callState = {
     iceCandidates: [],
     statsInterval: null,
     heartbeatInterval: null,
-    pendingOffer: null, // Stores incoming call offer until accepted
-    callTimeout: null // Timeout for pending call acceptance
+    pendingOffer: null,
+    callTimeout: null,
+    isCaller: false
 };
 
 // Debugging Utilities
@@ -35,17 +34,28 @@ function debugLog(...messages) {
         const state = {
             pcState: callState.peerConnection ? {
                 signaling: callState.peerConnection.signalingState,
-                ice: callState.peerConnection.iceConnectionState
+                ice: callState.peerConnection.iceConnectionState,
+                gathering: callState.peerConnection.iceGatheringState
             } : null,
             callActive: callState.callActive,
-            wsState: videoSocket ? videoSocket.readyState : null
+            wsState: videoSocket ? videoSocket.readyState : null,
+            isCaller: callState.isCaller,
+            userAgent: navigator.userAgent
         };
         console.log(`🔍 [${timestamp}]`, ...messages, '\nState:', state);
+        
+        // Android-specific debug
+        if (navigator.userAgent.match(/Android/i)) {
+            console.log('ANDROID DEBUG:', ...messages);
+        }
     }
 }
 
 function errorLog(...messages) {
     console.error(`❌ [${new Date().toISOString()}]`, ...messages);
+    if (navigator.userAgent.match(/Android/i)) {
+        console.error('ANDROID ERROR:', ...messages);
+    }
 }
 
 // WebSocket Connection with Reconnect
@@ -62,6 +72,7 @@ function initializeVideoSocket() {
         reconnectAttempts = 0;
         setupHeartbeat();
         monitorConnectionState();
+        sendSignal({ action: 'connection_init' });
     };
 
     videoSocket.onclose = (event) => {
@@ -88,6 +99,7 @@ function attemptReconnect() {
         setTimeout(initializeVideoSocket, delay);
     } else {
         debugLog('Max reconnection attempts reached');
+        showNotification('Connection lost. Please refresh the page.');
     }
 }
 
@@ -137,7 +149,7 @@ function handleWebSocketMessage(event) {
 
         debugLog('Processing action:', data.action);
         switch(data.action) {
-            case 'connection_success':
+            case 'connection_ack':
                 debugLog('WebSocket connection confirmed');
                 break;
             case 'call':
@@ -191,6 +203,7 @@ function handleWebSocketMessage(event) {
                 break;
             case 'error':
                 errorLog('Server error:', data.message);
+                showNotification('Error: ' + data.message);
                 break;
             default:
                 debugLog('Unknown action received:', data.action);
@@ -448,6 +461,7 @@ async function initiateCall(username) {
     debugLog('Initiating call to:', username);
     callState.currentCallRecipient = username;
     callState.callActive = true;
+    callState.isCaller = true;
     showCallWaitingScreen(`Calling ${username}...`);
 
     try {
@@ -477,23 +491,14 @@ async function initiateCall(username) {
             throw new Error('Failed to send call signal');
         }
 
-        // Create and send offer
-        const offer = await callState.peerConnection.createOffer({
-            offerToReceiveAudio: true,
-            offerToReceiveVideo: true,
-            iceRestart: false
-        });
-        
-        debugLog('Created offer:', offer.type);
-        await callState.peerConnection.setLocalDescription(offer);
-        
-        if (!sendSignal({
-            action: 'offer',
-            offer: offer,
-            recipient: username
-        })) {
-            throw new Error('Failed to send offer');
-        }
+        // Set timeout for call acceptance
+        callState.callTimeout = setTimeout(() => {
+            if (!callState.peerConnection || callState.peerConnection.signalingState !== 'stable') {
+                debugLog('Call acceptance timeout reached');
+                endCall(true);
+                showNotification(`${username} didn't answer your call`);
+            }
+        }, CALL_TIMEOUT);
 
     } catch (error) {
         errorLog('Call initiation failed:', error);
@@ -515,19 +520,14 @@ async function handleIncomingCall(caller) {
         return;
     }
 
-    // Store the caller information but don't process yet
-    callState.pendingOffer = {
-        caller: caller,
-        offer: null // will be set when handleOffer is called
-    };
-    
     callState.currentCallRecipient = caller;
+    callState.isCaller = false;
     document.getElementById('callerName').textContent = `${caller} is calling...`;
     showCallAlert();
     
     // Set timeout for call acceptance
     callState.callTimeout = setTimeout(() => {
-        if (!callState.callActive && callState.pendingOffer) {
+        if (!callState.callActive) {
             debugLog('Call acceptance timeout reached');
             sendSignal({
                 action: 'decline',
@@ -553,28 +553,75 @@ async function handleOffer(offer, sender) {
         return;
     }
 
-    // Store the offer but don't process it yet
-    if (callState.pendingOffer && callState.pendingOffer.caller === sender) {
-        callState.pendingOffer.offer = offer;
-    } else {
-        // This shouldn't normally happen
-        callState.pendingOffer = {
-            caller: sender,
-            offer: offer
-        };
+    if (callState.currentCallRecipient !== sender) {
+        debugLog('Offer from unexpected sender, ignoring');
+        return;
     }
-    
-    // Just show the call alert - processing will happen when user accepts
-    callState.currentCallRecipient = sender;
-    document.getElementById('callerName').textContent = `${sender} is calling...`;
-    showCallAlert();
+
+    try {
+        callState.callActive = true;
+        const stream = await getLocalMediaStream();
+        callState.localStream = stream;
+        
+        const localVideo = document.getElementById('localVideo');
+        if (localVideo) {
+            localVideo.srcObject = stream;
+            localVideo.onloadedmetadata = () => {
+                debugLog('Local video metadata loaded');
+                localVideo.play().catch(e => {
+                    errorLog('Error playing local video:', e);
+                });
+            };
+        }
+
+        createPeerConnection();
+        addLocalStreamToConnection(stream);
+        startConnectionMonitoring();
+
+        // Set remote description
+        debugLog('Setting remote description from offer');
+        await callState.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+        // Create and send answer
+        const answer = await callState.peerConnection.createAnswer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: true
+        });
+        
+        debugLog('Created answer:', answer.type);
+        await callState.peerConnection.setLocalDescription(answer);
+        
+        if (!sendSignal({
+            action: 'answer',
+            answer: answer,
+            recipient: sender
+        })) {
+            throw new Error('Failed to send answer');
+        }
+
+        // Add any queued ICE candidates
+        if (callState.iceCandidates.length > 0) {
+            debugLog('Adding queued ICE candidates:', callState.iceCandidates.length);
+            for (const candidate of callState.iceCandidates) {
+                await callState.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+            callState.iceCandidates = [];
+        }
+        
+        toggleVideoElements(true);
+        hideCallAlert();
+    } catch (error) {
+        errorLog('Error handling offer:', error);
+        endCall(false);
+        showNotification('Error handling call: ' + error.message);
+    }
 }
 
 async function handleAnswer(answer, sender) {
     debugLog('Handling answer from:', sender);
     
-    if (!callState.peerConnection || callState.peerConnection.signalingState !== 'have-local-offer') {
-        errorLog('Unexpected answer received in current signaling state');
+    if (!callState.peerConnection || !callState.isCaller) {
+        errorLog('Unexpected answer received when not the caller');
         return;
     }
 
@@ -629,14 +676,54 @@ async function handleNewICECandidate(candidate) {
         }
     } catch (error) {
         errorLog('Error adding ICE candidate:', error);
+        // Store it for later if we can't add it now
+        callState.iceCandidates.push(candidate);
     }
 }
 
 function handleCallAccepted(sender) {
     debugLog('Call accepted by:', sender);
-    hideCallWaitingScreen();
-    toggleVideoElements(true);
-    showNotification(`${sender} accepted your call`);
+    
+    // Clear the call timeout
+    if (callState.callTimeout) {
+        clearTimeout(callState.callTimeout);
+        callState.callTimeout = null;
+    }
+
+    if (!callState.isCaller) {
+        debugLog('Unexpected accept message when not the caller');
+        return;
+    }
+
+    // Now create and send the offer
+    createAndSendOffer(sender);
+}
+
+async function createAndSendOffer(recipient) {
+    try {
+        const offer = await callState.peerConnection.createOffer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: true,
+            iceRestart: false
+        });
+        
+        debugLog('Created offer:', offer.type);
+        await callState.peerConnection.setLocalDescription(offer);
+        
+        if (!sendSignal({
+            action: 'offer',
+            offer: offer,
+            recipient: recipient
+        })) {
+            throw new Error('Failed to send offer');
+        }
+        
+        hideCallWaitingScreen();
+        toggleVideoElements(true);
+    } catch (error) {
+        errorLog('Error creating offer after acceptance:', error);
+        endCall(true);
+    }
 }
 
 function handleCallDeclined(sender, reason) {
@@ -691,6 +778,7 @@ function endCall(isInitiator) {
     callState.callActive = false;
     callState.iceCandidates = [];
     callState.pendingOffer = null;
+    callState.isCaller = false;
     
     // Clear video elements
     const remoteVideo = document.getElementById('remoteVideo');
@@ -767,76 +855,25 @@ function setupEventListeners() {
         acceptBtn.addEventListener('click', async () => {
             debugLog('Call accepted by local user');
             
-            if (!callState.pendingOffer || !callState.pendingOffer.offer) {
-                errorLog('No pending offer to accept');
+            if (!callState.currentCallRecipient) {
+                errorLog('No call to accept');
                 return;
             }
             
-            try {
-                callState.callActive = true;
-                const offer = callState.pendingOffer.offer;
-                const sender = callState.pendingOffer.caller;
-                
-                // Clear the call timeout
-                if (callState.callTimeout) {
-                    clearTimeout(callState.callTimeout);
-                    callState.callTimeout = null;
-                }
-                
-                // Now process the offer
-                const stream = await getLocalMediaStream();
-                callState.localStream = stream;
-                
-                const localVideo = document.getElementById('localVideo');
-                if (localVideo) {
-                    localVideo.srcObject = stream;
-                    localVideo.onloadedmetadata = () => {
-                        debugLog('Local video metadata loaded');
-                        localVideo.play().catch(e => {
-                            errorLog('Error playing local video:', e);
-                        });
-                    };
-                }
-
-                createPeerConnection();
-                addLocalStreamToConnection(stream);
-                startConnectionMonitoring();
-
-                // Set remote description
-                debugLog('Setting remote description from offer');
-                await callState.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-
-                // Create and send answer
-                const answer = await callState.peerConnection.createAnswer({
-                    offerToReceiveAudio: true,
-                    offerToReceiveVideo: true
-                });
-                
-                debugLog('Created answer:', answer.type);
-                await callState.peerConnection.setLocalDescription(answer);
-                
-                if (!sendSignal({
-                    action: 'answer',
-                    answer: answer,
-                    recipient: sender
-                })) {
-                    throw new Error('Failed to send answer');
-                }
-
-                // Send acceptance signal
-                sendSignal({ 
-                    action: 'accept', 
-                    recipient: sender 
-                });
-                
-                toggleVideoElements(true);
-                hideCallAlert();
-                
-            } catch (error) {
-                errorLog('Error accepting call:', error);
-                endCall(false);
-                showNotification('Error accepting call: ' + error.message);
+            // Clear the call timeout
+            if (callState.callTimeout) {
+                clearTimeout(callState.callTimeout);
+                callState.callTimeout = null;
             }
+            
+            // Send acceptance signal
+            sendSignal({ 
+                action: 'accept', 
+                recipient: callState.currentCallRecipient 
+            });
+            
+            // The offer will be handled when received
+            hideCallAlert();
         });
     }
     
@@ -852,7 +889,8 @@ function setupEventListeners() {
             
             sendSignal({ 
                 action: 'decline', 
-                recipient: callState.currentCallRecipient 
+                recipient: callState.currentCallRecipient,
+                reason: 'declined'
             });
             endCall(false);
         });
@@ -880,4 +918,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     toggleVideoElements(false);
     initializeVideoSocket();
+    
+    // Add Android-specific initialization if needed
+    if (navigator.userAgent.match(/Android/i)) {
+        debugLog('Android device detected - applying optimizations');
+        
+    }
 });
